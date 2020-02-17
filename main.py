@@ -42,7 +42,7 @@ class Home:
                     q = Queue()
 
                     for i in range(thread_count):
-                        th = option(queue=q, f_path=self.f_path)
+                        th = option(queue=q)
                         th.daemon = True
                         th.start()
 

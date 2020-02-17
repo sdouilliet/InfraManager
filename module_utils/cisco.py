@@ -12,11 +12,10 @@ from utils import *
 class RunSwitchesBackup(threading.Thread):
     """Récupére la running-config des switches et l'enregistre dans dans un fichier local"""
 
-    def __init__(self, queue, f_path):
+    def __init__(self, queue):
         threading.Thread.__init__(self)
 
         self.queue = queue
-        self.f_path = f_path
 
     def run(self):
         """Sauvegarde des switches"""
@@ -53,11 +52,10 @@ class RunSwitchesBackup(threading.Thread):
 class GenerateLogReport(threading.Thread):
     """Génére un rapport sur les journaux d'une liste de switches"""
 
-    def __init__(self, queue, f_path):
+    def __init__(self, queue):
         threading.Thread.__init__(self)
 
         self.queue = queue
-        self.f_path = f_path
         self.content = ''
 
     def run(self):
@@ -203,3 +201,86 @@ class GenerateLogReport(threading.Thread):
 
         # Ouverture du rapport dans le navigateur par défaut
         webbrowser.open_new_tab(report_name)
+
+
+class GenerateTopology(threading.Thread):
+
+    def __init__(self, queue, user, pawd):
+        threading.Thread.__init__(self)
+
+        self.queue = queue
+
+    def run(self):
+
+        while True:
+            hostname = self.queue.get()
+            print('Analyse de ' + hostname)
+            conn = self.connection(hostname)
+
+            if conn is not False:
+                device_name = self.get_hostname(conn)
+                devices_list = self.get_neighbors_ids(conn)
+                ifaces_list = self.get_interfaces(conn)
+
+                neighbors = {}
+                for n in devices_list:
+                    interco = ifaces_list[devices_list.index(n)].split(',')
+
+                    neighbors.update(
+                        {
+                            n: {
+                                'Lport': interco[0],
+                                'Rport': interco[1]
+                            }
+                        }
+                    )
+
+                global_cdp_neighbors.append(
+                    {
+                        device_name: neighbors
+                    }
+                )
+
+            self.queue.task_done()
+
+        conn.disconnect()
+
+    def connection(self, hostname):
+
+        try:
+            ssh_connection = ConnectHandler(
+                hostname,
+                username=self.username,
+                password=self.password,
+                device_type='cisco_ios'
+            )
+
+        except (NetMikoTimeoutException, SSHException) as e:
+            print('Erreur: ' + str(e))
+            return False
+
+        return ssh_connection
+
+    @staticmethod
+    def get_hostname(conn):
+        show_run_hn = conn.send_command('show running-config | include hostname')
+        hostname = str(show_run_hn.replace('hostname ', ''))
+
+        return hostname
+
+    @staticmethod
+    def get_neighbors_ids(conn):
+        show_devices_ids = conn.send_command('show cdp neighbors detail | include Device ID:')
+        string1 = str(show_devices_ids.replace('Device ID: ', ''))
+        devices_list = string1.split('\n')
+
+        return devices_list
+
+    @staticmethod
+    def get_interfaces(conn):
+        show_interfaces = conn.send_command('show cdp neighbors detail | include Interface:')
+        string1 = str(show_interfaces.replace('Interface: ', ''))
+        string2 = str(string1.replace('  Port ID (outgoing port): ', ''))
+        iface_list = string2.split('\n')
+
+        return iface_list
