@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report</title>
+</head>
+<style type="text/css" media="screen">
+
+body {
+    margin: 0px;
+    padding: 0px 0px 12px 0px; /* haut | droit | bas | gauche */
+    height: 100%;
+    width: 100%;
+    font-family: sans-serif;
+}
+
+h1 {
+    margin: 12px;
+    padding: 12px;
+    font-size: 24px;
+    background-color: #002F60;
+    color: #FFFFFF;
+    font-weight: normal;
+}
+
+h2 {
+    margin: 24px 12px 12px 24px; /* haut | droit | bas | gauche */
+    padding: 10px;
+    font-size: 18px;
+    color: #FFFFFF;
+    font-weight: normal;
+}
+
+h2.connected {
+    background-color: #5692CE;
+}
+
+h2.connected:hover {
+    background-color: #008A9B;
+    cursor: pointer;
+}
+
+h2.error {
+    background-color: #E53138;
+}
+
+h3 {
+    margin: 24px 12px 12px 36px; /* haut | droit | bas | gauche */
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.code {
+    max-height: 400px;
+    overflow: auto;
+    border: 1px solid #5D5F60;
+    margin: 0px 12px 0px 48px; /* haut | droit | bas | gauche */
+    padding: 6px 12px 6px 12px; /* haut | droit | bas | gauche */
+    display: block;
+    background-color: #CFD1D2;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    line-height : 20px;
+}
+
+p.nomsg {
+   margin: 0px 12px 0px 48px; /* haut | droit | bas | gauche */
+}
+
+</style>
+<body>
+    <h1>Logs analysis report - {{ datenow }}</h1>
+
+    <div id="content">{{ report }}</div>
+</body>
+<script type="text/javascript">
+    document.addEventListener('click', function(event){
+        if(event.target.matches('.connected')){
+            sub_id = 'sub_' + event.target.getAttribute('id');
+            element = document.getElementById(sub_id);
+
+            if(element.style.display === 'none'){
+                element.style.display = 'block';
+            }else{
+                element.style.display = 'none';
+            }
+        }
+    }, false);
+</script>
+</html>
